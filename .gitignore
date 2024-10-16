@@ -1,3 +1,6 @@
+# ignroe python virtual environment
+/hw1/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
