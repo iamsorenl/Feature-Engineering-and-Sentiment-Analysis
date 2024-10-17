@@ -104,7 +104,7 @@ def naive_bayes(X_train, X_test, y_train, y_test):
         print("Confusion Matrix:")
         print(cm)
 
-def SVM(X_train, X_test, y_train, y_test):
+def svm(X_train, X_test, y_train, y_test):
     """
     Train a Support Vector Machine (SVM) classifier using 3 different feature engineering techniques
     on the training data and evaluate it on the test data.
@@ -172,13 +172,21 @@ def main():
     print(y_test.value_counts())
 
     # Plot the class distribution
-    plot_class_distribution(y_train, y_test)
+    #plot_class_distribution(y_train, y_test)
+
+    print("\n--start naive bayes--\n")
 
     # Train and evaluate the Naive Bayes classifier using different feature engineering techniques
     naive_bayes(X_train, X_test, y_train, y_test)
 
+    print("\n--end naive bayes--\n")
+
+    print("\n--start svm--\n")
+
     # Train and evaluate the SVM classifier using different feature engineering techniques
-    SVM(X_train, X_test, y_train, y_test)
+    svm(X_train, X_test, y_train, y_test)
+
+    print("\n--end svm--\n")
 
 
 
