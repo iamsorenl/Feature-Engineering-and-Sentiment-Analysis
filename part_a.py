@@ -1,8 +1,11 @@
 import pandas as pd
+from timeit import default_timer as timer
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score
+from sklearn.svm import SVC
+from sklearn.decomposition import TruncatedSVD
+from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
 import matplotlib.pyplot as plt
 
 def binary_classification(df):
@@ -12,9 +15,11 @@ def binary_classification(df):
     Rows with score 3 are removed.
     """
     # Filter out reviews with score 3
-    df = df[df['review/score'] != 3]
-    # Create binary labels: 1 for positive, 0 for negative
-    df['binary_review/score'] = df['review/score'].apply(lambda x: 1 if x >= 4 else 0)
+    df = df[df['review/score'] != 3].copy()  # Use .copy() to avoid SettingWithCopyWarning
+    
+    # Create binary labels using .loc to modify safely
+    df.loc[:, 'binary_review/score'] = df['review/score'].apply(lambda x: 1 if x >= 4 else 0)
+    
     return df
 
 def tt_split(df):
@@ -63,43 +68,92 @@ def naive_bayes(X_train, X_test, y_train, y_test):
     2. Term Frequency-Inverse Document Frequency (TF-IDF)
     3. N-grams
     """
+    classifiers = [
+        ("BoW", MultinomialNB(), CountVectorizer()),
+        ("TF-IDF", MultinomialNB(), TfidfVectorizer()),
+        ("N-Grams", MultinomialNB(), CountVectorizer(ngram_range=(1, 2))),
+    ]
 
-    # Initialize the classifiers
-    bow_classifier = MultinomialNB()
-    tfidf_classifier = MultinomialNB()
-    ngram_classifier = MultinomialNB()
+    for name, clf, vectorizer in classifiers:
+        # Timer start
+        start = timer()
 
-    # Initialize the vectorizers
-    bow_vectorizer = CountVectorizer()
+        # Fit and transform the training data
+        X_train_vec = vectorizer.fit_transform(X_train['review/text'])
+        X_test_vec = vectorizer.transform(X_test['review/text'])
+
+        # Train the model
+        clf.fit(X_train_vec, y_train)
+
+        # Prediction and timing end
+        y_pred = clf.predict(X_test_vec)
+        end = timer()
+
+        # Evaluate the model
+        accuracy = accuracy_score(y_test, y_pred)
+        f1_binary = f1_score(y_test, y_pred, average='binary')
+        f1_macro = f1_score(y_test, y_pred, average='macro')
+        cm = confusion_matrix(y_test, y_pred)
+
+        # Print results
+        print(f"\n=== {name} Model ===")
+        print(f"Training + Prediction Time: {end - start:.4f} seconds")
+        print(f"Accuracy: {accuracy:.4f}")
+        print(f"Binary F1 Score: {f1_binary:.4f}")
+        print(f"Macro-F1 Score: {f1_macro:.4f}")
+        print("Confusion Matrix:")
+        print(cm)
+
+def SVM(X_train, X_test, y_train, y_test):
+    """
+    Train a Support Vector Machine (SVM) classifier using 3 different feature engineering techniques
+    on the training data and evaluate it on the test data.
+    Features:
+    1. SVD + Linear Kernel
+    2. Term Frequency-Inverse Document Frequency (TF-IDF) + Linear Kernel
+    3. Term Frequency-Inverse Document Frequency (TF-IDF) + Polynomial Kernel
+    """
+    
     tfidf_vectorizer = TfidfVectorizer()
-    ngram_vectorizer = CountVectorizer(ngram_range=(1, 2))
+    svd = TruncatedSVD(n_components=100, random_state=24)
 
-    # Fit the vectorizers and transform the training data
-    bow_train = bow_vectorizer.fit_transform(X_train['review/text'])
+    # Transform the data
     tfidf_train = tfidf_vectorizer.fit_transform(X_train['review/text'])
-    ngram_train = ngram_vectorizer.fit_transform(X_train['review/text'])
-
-    # Train the classifiers
-    bow_classifier.fit(bow_train, y_train)
-    tfidf_classifier.fit(tfidf_train, y_train)
-    ngram_classifier.fit(ngram_train, y_train)
-
-    # Transform the test data
-    bow_test = bow_vectorizer.transform(X_test['review/text'])
     tfidf_test = tfidf_vectorizer.transform(X_test['review/text'])
-    ngram_test = ngram_vectorizer.transform(X_test['review/text'])
+    svd_train = svd.fit_transform(tfidf_train)
+    svd_test = svd.transform(tfidf_test)
 
-    # Predict the test data
-    bow_pred = bow_classifier.predict(bow_test)
-    tfidf_pred = tfidf_classifier.predict(tfidf_test)
-    ngram_pred = ngram_classifier.predict(ngram_test)
+    classifiers = [
+        ("SVD + Linear Kernel", SVC(kernel='linear', random_state=24), svd_train, svd_test),
+        ("TF-IDF + Linear Kernel", SVC(kernel='linear', random_state=24), tfidf_train, tfidf_test),
+        ("TF-IDF + Polynomial Kernel", SVC(kernel='poly', degree=3, random_state=24), tfidf_train, tfidf_test),
+    ]
 
-    # Evaluate the classifiers
-    bow_accuracy = accuracy_score(y_test, bow_pred)
-    tfidf_accuracy = accuracy_score(y_test, tfidf_pred)
-    ngram_accuracy = accuracy_score(y_test, ngram_pred)
+    for name, clf, X_train_vec, X_test_vec in classifiers:
+        # Timer start
+        start = timer()
 
-    return bow_accuracy, tfidf_accuracy, ngram_accuracy
+        # Train the model
+        clf.fit(X_train_vec, y_train)
+
+        # Prediction and timing end
+        y_pred = clf.predict(X_test_vec)
+        end = timer()
+
+        # Evaluate the model
+        accuracy = accuracy_score(y_test, y_pred)
+        f1_binary = f1_score(y_test, y_pred, average='binary')
+        f1_macro = f1_score(y_test, y_pred, average='macro')
+        cm = confusion_matrix(y_test, y_pred)
+
+        # Print results
+        print(f"\n=== {name} Model ===")
+        print(f"Training + Prediction Time: {end - start:.4f} seconds")
+        print(f"Accuracy: {accuracy:.4f}")
+        print(f"Binary F1 Score: {f1_binary:.4f}")
+        print(f"Macro-F1 Score: {f1_macro:.4f}")
+        print("Confusion Matrix:")
+        print(cm)
     
 
 def main():
@@ -120,7 +174,11 @@ def main():
     # Plot the class distribution
     plot_class_distribution(y_train, y_test)
 
-    # Naive Bayes
+    # Train and evaluate the Naive Bayes classifier using different feature engineering techniques
+    naive_bayes(X_train, X_test, y_train, y_test)
+
+    # Train and evaluate the SVM classifier using different feature engineering techniques
+    SVM(X_train, X_test, y_train, y_test)
 
 
 
