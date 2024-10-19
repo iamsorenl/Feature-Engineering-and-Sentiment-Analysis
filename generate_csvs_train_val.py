@@ -2,9 +2,9 @@ import os
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-def generate_csvs_train_val(base_path, label_value):
+def parse_reviews(base_path, label_value):
     """
-    Parses reviews from the pos and neg folders within train and assigns the corresponding label (1 for positive, 0 for negative).
+    Parses reviews from a folder and assigns the corresponding label (1 for positive, 0 for negative).
     
     Args:
         base_path (str): Path to 'pos' or 'neg' folder.
@@ -22,18 +22,21 @@ def generate_csvs_train_val(base_path, label_value):
                 reviews.append((review_id, review, label_value))
     return reviews
 
-# Parse reviews from 'train/pos' and 'train/neg'
-train_pos = generate_csvs_train_val('aclImdb/train/pos', 1)
-train_neg = generate_csvs_train_val('aclImdb/train/neg', 0)
+# Step 1: Parse reviews from 'train/pos' and 'train/neg'
+train_pos = parse_reviews('aclImdb/train/pos', 1)
+train_neg = parse_reviews('aclImdb/train/neg', 0)
 
-# Combine the positive and negative reviews into one DataFrame
-train_df = pd.DataFrame(train_pos + train_neg, columns=['id', 'review', 'label'])
+# Step 2: Combine positive and negative reviews into a DataFrame
+df = pd.DataFrame(train_pos + train_neg, columns=['id', 'review', 'label'])
 
-# Split the data into 90% train and 10% validation
-train_data, val_data = train_test_split(train_df, test_size=0.1, random_state=42)
+# Step 3: Shuffle the data to ensure randomness
+df = df.sample(frac=1, random_state=42).reset_index(drop=True)
 
-# Save the train and validation splits to CSV files
+# Step 4: Stratified split into 90% train and 10% validation sets
+train_data, val_data = train_test_split(df, test_size=0.1, random_state=42, stratify=df['label'])
+
+# Step 5: Save the splits to CSV files
 train_data.to_csv('train.csv', index=False)
 val_data.to_csv('validation.csv', index=False)
 
-print("Files 'train.csv' and 'validation.csv' created successfully!")
+print("Balanced and stratified 'train.csv' and 'validation.csv' created successfully!")
