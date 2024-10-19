@@ -22,20 +22,20 @@ def parse_reviews(base_path, label_value):
                 reviews.append((review_id, review, label_value))
     return reviews
 
-# Step 1: Parse reviews from 'train/pos' and 'train/neg'
+# Parse reviews from 'train/pos' and 'train/neg'
 train_pos = parse_reviews('aclImdb/train/pos', 1)
 train_neg = parse_reviews('aclImdb/train/neg', 0)
 
-# Step 2: Combine positive and negative reviews into a DataFrame
+# Combine positive and negative reviews into a DataFrame
 df = pd.DataFrame(train_pos + train_neg, columns=['id', 'review', 'label'])
 
-# Step 3: Shuffle the data to ensure randomness
-df = df.sample(frac=1, random_state=42).reset_index(drop=True)
+# Shuffle the data to ensure randomness
+df = df.sample(frac=1, random_state=24).reset_index(drop=True)
 
-# Step 4: Stratified split into 90% train and 10% validation sets
-train_data, val_data = train_test_split(df, test_size=0.1, random_state=42, stratify=df['label'])
+# Stratified split into 90% train and 10% validation sets
+train_data, val_data = train_test_split(df, test_size=0.1, random_state=24, stratify=df['label'])
 
-# Step 5: Save the splits to CSV files
+# Save the splits to CSV files
 train_data.to_csv('train.csv', index=False)
 val_data.to_csv('validation.csv', index=False)
 

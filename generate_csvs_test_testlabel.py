@@ -28,6 +28,9 @@ test_neg = generate_csvs_test_testlabel('aclImdb/test/neg', 0)
 # Combine the positive and negative reviews into one DataFrame
 test_df = pd.DataFrame(test_pos + test_neg, columns=['id', 'review', 'label'])
 
+# Shuffle the test data for randomness
+test_df = test_df.sample(frac=1, random_state=24).reset_index(drop=True)
+
 # Save the full test data with labels to CSV
 test_df.to_csv('test_data_with_labels.csv', index=False)
 
