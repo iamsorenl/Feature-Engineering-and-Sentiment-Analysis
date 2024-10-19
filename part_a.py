@@ -2,193 +2,126 @@ import pandas as pd
 from timeit import default_timer as timer
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.svm import SVC
-from sklearn.decomposition import TruncatedSVD
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
 import matplotlib.pyplot as plt
 
 def binary_classification(df):
-    """
-    Convert the review score into binary classification labels.
-    1: Positive (score >= 4), 0: Negative (score <= 2).
-    Rows with score 3 are removed.
-    """
-    # Filter out reviews with score 3
-    df = df[df['review/score'] != 3].copy()  # Use .copy() to avoid SettingWithCopyWarning
-    
-    # Create binary labels using .loc to modify safely
+    """Convert review scores into binary labels."""
+    df = df[df['review/score'] != 3].copy()
     df.loc[:, 'binary_review/score'] = df['review/score'].apply(lambda x: 1 if x >= 4 else 0)
-    
     return df
 
 def tt_split(df):
-    """
-    Split the dataset into training and testing sets.
-    Use 85% of the data for training and 15% for testing.
-    """
-    # Use train_test_split to split the data by labels only
+    """Split dataset into training and test sets."""
     y = df['binary_review/score']
-
     X_train, X_test, y_train, y_test = train_test_split(
-        df, y, 
-        test_size=0.15,         # 15% for testing
-        random_state=24,        # Ensure reproducibility
-        shuffle=True,           # Shuffle data before splitting
-        stratify=y              # Maintain class balance
+        df, y, test_size=0.15, random_state=24, shuffle=True, stratify=y
     )
-    
     return X_train, X_test, y_train, y_test
 
 def plot_class_distribution(y_train, y_test):
-    """
-    Plot the distribution of labels in the train and test datasets.
-    """
+    """Plot label distribution in train and test sets."""
     _, axes = plt.subplots(1, 2, figsize=(12, 5))
 
-    # Train set distribution
     y_train.value_counts().plot(kind='bar', ax=axes[0], color='skyblue', title='Training Set Distribution')
     axes[0].set_xlabel('Class')
     axes[0].set_ylabel('Count')
 
-    # Test set distribution
     y_test.value_counts().plot(kind='bar', ax=axes[1], color='lightgreen', title='Test Set Distribution')
     axes[1].set_xlabel('Class')
     axes[1].set_ylabel('Count')
 
-    # Display the plots
     plt.show()
 
-def naive_bayes(X_train, X_test, y_train, y_test):
-    """
-    Train a Naive Bayes classifier using 3 different feature engineering techniques
-    on the training data and evaluate it on the test data.
-    Features:
-    1. Bag of Words (BoW)
-    2. Term Frequency-Inverse Document Frequency (TF-IDF)
-    3. N-grams
-    """
-    classifiers = [
-        ("BoW", MultinomialNB(), CountVectorizer()),
-        ("TF-IDF", MultinomialNB(), TfidfVectorizer()),
-        ("N-Grams", MultinomialNB(), CountVectorizer(ngram_range=(1, 2))),
-    ]
+def evaluate_model(name, clf, X_train, X_test, y_train, y_test):
+    """Train, predict, and evaluate the model with separate training and prediction times."""
+    # Measure training time
+    start_train = timer()
+    clf.fit(X_train, y_train)
+    end_train = timer()
 
-    for name, clf, vectorizer in classifiers:
-        # Timer start
-        start = timer()
+    # Measure prediction time
+    start_pred = timer()
+    y_pred = clf.predict(X_test)
+    end_pred = timer()
 
-        # Fit and transform the training data
-        X_train_vec = vectorizer.fit_transform(X_train['review/text'])
-        X_test_vec = vectorizer.transform(X_test['review/text'])
+    # Evaluate the model
+    accuracy = accuracy_score(y_test, y_pred)
+    f1_binary = f1_score(y_test, y_pred, average='binary')
+    f1_macro = f1_score(y_test, y_pred, average='macro')
+    cm = confusion_matrix(y_test, y_pred)
 
-        # Train the model
-        clf.fit(X_train_vec, y_train)
+    # Print results
+    print(f"\n=== {name} Model ===")
+    print(f"Training Time: {end_train - start_train:.4f} seconds")
+    print(f"Prediction Time: {end_pred - start_pred:.4f} seconds")
+    print(f"Accuracy: {accuracy:.4f}")
+    print(f"Binary F1 Score: {f1_binary:.4f}")
+    print(f"Macro-F1 Score: {f1_macro:.4f}")
+    print("Confusion Matrix:")
+    print(cm)
 
-        # Prediction and timing end
-        y_pred = clf.predict(X_test_vec)
-        end = timer()
-
-        # Evaluate the model
-        accuracy = accuracy_score(y_test, y_pred)
-        f1_binary = f1_score(y_test, y_pred, average='binary')
-        f1_macro = f1_score(y_test, y_pred, average='macro')
-        cm = confusion_matrix(y_test, y_pred)
-
-        # Print results
-        print(f"\n=== {name} Model ===")
-        print(f"Training + Prediction Time: {end - start:.4f} seconds")
-        print(f"Accuracy: {accuracy:.4f}")
-        print(f"Binary F1 Score: {f1_binary:.4f}")
-        print(f"Macro-F1 Score: {f1_macro:.4f}")
-        print("Confusion Matrix:")
-        print(cm)
-
-def svm(X_train, X_test, y_train, y_test):
-    """
-    Train a Support Vector Machine (SVM) classifier using 3 different feature engineering techniques
-    on the training data and evaluate it on the test data.
-    Features:
-    1. SVD + Linear Kernel
-    2. Term Frequency-Inverse Document Frequency (TF-IDF) + Linear Kernel
-    3. Term Frequency-Inverse Document Frequency (TF-IDF) + Polynomial Kernel
-    """
-    
+def prepare_features(X_train, X_test):
+    """Generate features: BoW, TF-IDF, and One-Hot Encoding."""
+    bow_vectorizer = CountVectorizer()
     tfidf_vectorizer = TfidfVectorizer()
-    svd = TruncatedSVD(n_components=100, random_state=24)
+    enc = OneHotEncoder(handle_unknown='ignore')
 
-    # Transform the data
+    bow_train = bow_vectorizer.fit_transform(X_train['review/text'])
+    bow_test = bow_vectorizer.transform(X_test['review/text'])
+
     tfidf_train = tfidf_vectorizer.fit_transform(X_train['review/text'])
     tfidf_test = tfidf_vectorizer.transform(X_test['review/text'])
-    svd_train = svd.fit_transform(tfidf_train)
-    svd_test = svd.transform(tfidf_test)
 
-    classifiers = [
-        ("SVD + Linear Kernel", SVC(kernel='linear', random_state=24), svd_train, svd_test),
-        ("TF-IDF + Linear Kernel", SVC(kernel='linear', random_state=24), tfidf_train, tfidf_test),
-        ("TF-IDF + Polynomial Kernel", SVC(kernel='poly', degree=3, random_state=24), tfidf_train, tfidf_test),
-    ]
+    onehot_train = enc.fit_transform(X_train[['Title', 'review/summary']])
+    onehot_test = enc.transform(X_test[['Title', 'review/summary']])
 
+    return bow_train, bow_test, tfidf_train, tfidf_test, onehot_train, onehot_test
+
+def apply_classifiers(classifiers, X_train, X_test, y_train, y_test):
+    """Apply different classifiers with the same feature techniques."""
     for name, clf, X_train_vec, X_test_vec in classifiers:
-        # Timer start
-        start = timer()
-
-        # Train the model
-        clf.fit(X_train_vec, y_train)
-
-        # Prediction and timing end
-        y_pred = clf.predict(X_test_vec)
-        end = timer()
-
-        # Evaluate the model
-        accuracy = accuracy_score(y_test, y_pred)
-        f1_binary = f1_score(y_test, y_pred, average='binary')
-        f1_macro = f1_score(y_test, y_pred, average='macro')
-        cm = confusion_matrix(y_test, y_pred)
-
-        # Print results
-        print(f"\n=== {name} Model ===")
-        print(f"Training + Prediction Time: {end - start:.4f} seconds")
-        print(f"Accuracy: {accuracy:.4f}")
-        print(f"Binary F1 Score: {f1_binary:.4f}")
-        print(f"Macro-F1 Score: {f1_macro:.4f}")
-        print("Confusion Matrix:")
-        print(cm)
-    
+        evaluate_model(name, clf, X_train_vec, X_test_vec, y_train, y_test)
 
 def main():
-    # Create binary classification
+    # Load and preprocess data
     sbr = pd.read_csv('small_books_rating.csv')
     sbr_bc = binary_classification(sbr)
-    print(sbr_bc.head())
 
-    # Split the dataset
+    # Split data into train and test sets
     X_train, X_test, y_train, y_test = tt_split(sbr_bc)
-    
-    # Print the class distribution
+
+    # Print and plot class distribution
     print("\nTraining set label distribution:")
     print(y_train.value_counts())
     print("\nTest set label distribution:")
     print(y_test.value_counts())
+    plot_class_distribution(y_train, y_test)
 
-    # Plot the class distribution
-    #plot_class_distribution(y_train, y_test)
+    # Prepare features
+    bow_train, bow_test, tfidf_train, tfidf_test, onehot_train, onehot_test = prepare_features(X_train, X_test)
 
-    print("\n--start naive bayes--\n")
+    # Define classifiers for each feature
+    classifiers = [
+        ("BoW + Naive Bayes", MultinomialNB(), bow_train, bow_test),
+        ("TF-IDF + Naive Bayes", MultinomialNB(), tfidf_train, tfidf_test),
+        ("One-Hot + Naive Bayes", MultinomialNB(), onehot_train, onehot_test),
 
-    # Train and evaluate the Naive Bayes classifier using different feature engineering techniques
-    naive_bayes(X_train, X_test, y_train, y_test)
+        ("BoW + SVM", SVC(kernel='linear', random_state=24), bow_train, bow_test),
+        ("TF-IDF + SVM", SVC(kernel='linear', random_state=24), tfidf_train, tfidf_test),
+        ("One-Hot + SVM", SVC(kernel='poly', degree=3, random_state=24), onehot_train, onehot_test),
 
-    print("\n--end naive bayes--\n")
+        ("BoW + Decision Tree", DecisionTreeClassifier(random_state=24), bow_train, bow_test),
+        ("TF-IDF + Decision Tree", DecisionTreeClassifier(random_state=24), tfidf_train, tfidf_test),
+        ("One-Hot + Decision Tree", DecisionTreeClassifier(random_state=24), onehot_train, onehot_test),
+    ]
 
-    print("\n--start svm--\n")
-
-    # Train and evaluate the SVM classifier using different feature engineering techniques
-    svm(X_train, X_test, y_train, y_test)
-
-    print("\n--end svm--\n")
-
-
+    # Apply all classifiers
+    apply_classifiers(classifiers, X_train, X_test, y_train, y_test)
 
 if __name__ == "__main__":
     main()
