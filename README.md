@@ -1,8 +1,27 @@
 # Feature Engineering and Sentiment Analysis
 
-**Naive Bayes, Support Vector Machine, and Decision Tree classifiers implemented using scikit-learn with n-gram feature extraction**
+**Naive Bayes, Support Vector Machine, and Decision Tree Classifiers Implemented Using scikit-learn & Custom Models**
 
-This project involves implementing and comparing multiple machine learning models on text data. The models include **Naive Bayes, SVM, and Decision Trees**, using feature extraction techniques such as **Bag-of-Words (BoW)**, **TF-IDF**, and **One-Hot Encoding**. Additionally, a custom Naive Bayes classifier is implemented to compare performance with scikit-learn's version.
+This project showcases **feature engineering techniques** and **sentiment analysis** using **Naive Bayes, SVM, and Decision Trees** on Amazon and IMDb datasets. It integrates **n-gram feature extraction** with models built using scikit-learn and includes a **custom Naive Bayes classifier** to compare performance with built-in models.
+
+---
+
+## Features
+
+- **Custom Naive Bayes Implementation:** Developed from scratch and compared with scikit-learn’s version.
+- **Multiple Feature Engineering Techniques:** BoW, TF-IDF, and One-Hot Encoding.
+- **Sentiment Analysis on IMDb and Amazon Datasets.**
+- **Performance Metrics:** Comparison of Accuracy, F1 Score, and Confusion Matrices for all models.
+
+---
+
+## Tech Stack
+
+- [Python](https://www.python.org) - Programming language
+- [scikit-learn](https://scikit-learn.org) - Machine learning library
+- [pandas](https://pandas.pydata.org) - Data manipulation
+- [Matplotlib](https://matplotlib.org) - Visualization library
+- **IMDb & Amazon Datasets** - Datasets used for model evaluation
 
 ---
 
@@ -10,36 +29,40 @@ This project involves implementing and comparing multiple machine learning model
 
 ```plaintext
 .
-├── aclImdb/                     # Raw dataset containing IMDb movie reviews
-│   ├── train/                   # Training data (positive/negative reviews)
-│   ├── test/                    # Test data (positive/negative reviews)
-├── hw1/                         # Homework solutions and Python scripts
-│   ├── part_a.py                # Part A: Initial feature engineering & model evaluation
-│   ├── part_b.py                # Part B: Sentiment analysis on Stanford dataset
-│   ├── part_c.py                # Part C: Custom Naive Bayes implementation & comparison
-│   ├── my_naive_bayes.py        # Custom Naive Bayes class implementation (Part C)
-├── generate_csv_train.py        # Converts raw IMDb dataset into a train CSV
-├── generate_csv_test.py         # Converts raw IMDb dataset into a test CSV
-├── small_books_rating.csv       # Amazon book reviews dataset for Part A
-├── test_predictions.csv         # Test predictions from the best-performing model
-├── train.csv / test.csv         # Processed train and test CSVs for IMDb dataset
-├── requirements.txt             # List of Python dependencies
-└── README.md                    # Instructions and project details (this file)
+├── aclImdb/                     # Raw IMDb dataset
+│   ├── train/                   # Training data
+│   ├── test/                    # Test data
+├── hw1/                         # Python scripts for each part
+│   ├── part_a.py                # Part A: Feature engineering & evaluation
+│   ├── part_b.py                # Part B: Sentiment analysis on IMDb dataset
+│   ├── part_c.py                # Part C: Custom Naive Bayes implementation
+│   ├── my_naive_bayes.py        # Custom Naive Bayes classifier class
+├── generate_csv_train.py        # Generate train CSV from IMDb data
+├── generate_csv_test.py         # Generate test CSV from IMDb data
+├── small_books_rating.csv       # Amazon book reviews dataset
+├── train.csv / test.csv         # Processed IMDb datasets
+├── test_predictions.csv         # Output predictions from models
+├── requirements.txt             # List of dependencies
+└── README.md                    # This file
+```
 
-Setup Instructions
+---
 
-1. Clone the Repository
+## Installation
 
-Clone the project repository to your local machine:
+This project requires **Python 3.8+**. Follow the steps below to set up the environment and run the project.
 
+### 1. Clone the Repository
+
+```bash
 git clone <repository-url>
 cd <repository-folder>
+```
 
-2. Create a Virtual Environment
+### 2. Create a Virtual Environment
 
-It’s recommended to use a virtual environment to manage dependencies:
-
-# Create a virtual environment named 'venv'
+```bash
+# Create a virtual environment
 python3 -m venv venv
 
 # Activate the virtual environment
@@ -48,114 +71,127 @@ source venv/bin/activate
 
 # On Windows:
 venv\Scripts\activate
+```
 
-3. Install Dependencies
+### 3. Install Dependencies
 
-Install the required dependencies from the requirements.txt file:
-
+```bash
 pip install -r requirements.txt
+```
 
-Instructions for Running the Python Files
+---
 
-1. Part A: Feature Engineering & Initial Model Evaluation
+## Running the Scripts
 
-File: part_a.py
+### Part A: Feature Engineering & Model Evaluation
 
-Description:
-This script loads the Amazon book reviews dataset (small_books_rating.csv), performs feature extraction using BoW, TF-IDF, and One-Hot Encoding, and evaluates Naive Bayes, SVM, and Decision Tree classifiers.
-The models are compared based on accuracy, F1 scores, and confusion matrices.
+**File:** `part_a.py`  
+This script applies **BoW, TF-IDF, and One-Hot Encoding** on the Amazon book reviews dataset, evaluating the performance of **Naive Bayes, SVM, and Decision Tree models**.
 
-Run:
-
+```bash
 python part_a.py
+```
 
-2. Part B: Sentiment Analysis on IMDb Dataset
+---
 
-File: part_b.py
+### Part B: Sentiment Analysis on IMDb Dataset
 
-Description:
-This script performs sentiment classification on the IMDb movie review dataset. It uses n-gram features to train and evaluate models on a train/validation split. The script fine-tunes hyperparameters to find the optimal configurations and reports results for each model.
+**File:** `part_b.py`  
+This script analyzes sentiment on the **IMDb dataset** using n-gram features and multiple classifiers. It evaluates models with both a **train/validation split** and reports accuracy, F1 scores, and confusion matrices.
 
-Run:
-
+```bash
 python part_b.py
+```
 
-3. Part C: Custom Naive Bayes Implementation
+---
 
-Files:
+### Part C: Custom Naive Bayes Implementation & Comparison
 
-	•	part_c.py
-	•	my_naive_bayes.py
+**Files:**
 
-Description:
-This part implements a custom Naive Bayes classifier in my_naive_bayes.py. The part_c.py script integrates this custom classifier into the workflow to compare its performance with scikit-learn’s Multinomial Naive Bayes implementation.
+- `part_c.py`
+- `my_naive_bayes.py`
 
-Run:
+This section demonstrates a **custom Naive Bayes classifier** and compares its performance against the scikit-learn version. The script in `part_c.py` integrates the custom model into the workflow.
 
+```bash
 python part_c.py
+```
 
-4. Generating Train/Test CSVs from Raw IMDb Dataset
+---
 
-Files:
+### Generating CSV Files from IMDb Data
 
-	•	generate_csv_train.py
-	•	generate_csv_test.py
+**Files:**
 
-Description:
-These scripts process the raw IMDb dataset into structured train and test CSV files for use in other experiments.
-Ensure the aclImdb folder is correctly placed when running these scripts.
+- `generate_csv_train.py`
+- `generate_csv_test.py`
 
-Run:
+These scripts convert the raw IMDb dataset into structured **CSV files** for further analysis. Ensure the `aclImdb` folder is placed correctly.
 
+```bash
 # Generate train.csv
 python generate_csv_train.py
 
 # Generate test.csv
 python generate_csv_test.py
-
-Output Files
-
-	•	test_predictions.csv: Contains predictions made on the IMDb test set by the best-performing model from Part B.
-	•	train.csv / test.csv: Processed train and test splits generated from the IMDb dataset.
-
-Summary of Results
-
-Part A Results:
-
-	•	Best Model: SVM with TF-IDF
-	•	Accuracy: 89.02%
-	•	Binary F1 Score: 0.8898
-
-Part B Results:
-
-	•	Best Model: Logistic Regression with bigrams
-	•	Test Accuracy: 85.22%
-	•	Validation Accuracy: 87.36%
-
-Part C Results:
-
-	•	Custom Naive Bayes Performance:
-	•	BoW Accuracy: 85.02%
-	•	TF-IDF Accuracy: 87.09%
-	•	One-Hot Encoding Accuracy: 85.78%
-
-Troubleshooting
-
-	1.	Virtual Environment Activation Issues:
-Ensure you are using the correct path to the virtual environment.
-On Windows, try using venv\Scripts\activate.bat if the regular command doesn’t work.
-	2.	Missing Dependencies:
-Run pip install -r requirements.txt inside the virtual environment to install dependencies.
-	3.	Dataset Issues:
-Ensure the aclImdb dataset folder is in the correct directory when generating CSV files.
-
-License
-
-This project is licensed under the MIT License. See the LICENSE file for more information.
-
-Acknowledgments
-
-	•	The IMDb dataset is provided by Maas et al. (2011).
-	•	Amazon book reviews dataset used for initial feature engineering tasks.
-	•	Scikit-learn for pre-built models and utilities.
 ```
+
+---
+
+## Results Summary
+
+| **Model**   | **Feature**      | **Accuracy** | **Binary F1 Score** |
+| ----------- | ---------------- | ------------ | ------------------- |
+| Naive Bayes | BoW              | 85.02%       | 0.8410              |
+| Naive Bayes | TF-IDF           | 87.09%       | 0.8670              |
+| Naive Bayes | One-Hot Encoding | 85.78%       | 0.8598              |
+
+- **Best Model (Part A):** SVM with TF-IDF, achieving **89.02% accuracy**.
+- **Best Model (Part B):** Logistic Regression with bigrams, **87.36% validation accuracy** and **85.22% test accuracy**.
+- **Custom Naive Bayes (Part C):** Matches or outperforms scikit-learn Naive Bayes in multiple cases.
+
+---
+
+## Troubleshooting
+
+1. **Virtual Environment Issues:**  
+   Ensure the virtual environment is properly activated.
+
+   - On Windows: Use `venv\Scripts\activate.bat` if necessary.
+
+2. **Dataset Issues:**  
+   Ensure the `aclImdb` folder is placed correctly before generating CSVs.
+
+3. **Dependency Issues:**  
+   Install dependencies again if there are missing packages:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+---
+
+## Contributing
+
+Want to contribute? Great!
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/YourFeature`)
+3. Commit your changes (`git commit -m 'Add your feature'`)
+4. Push the branch (`git push origin feature/YourFeature`)
+5. Open a Pull Request
+
+---
+
+## Acknowledgments
+
+- **IMDb Dataset:** Provided by Maas et al. (2011).
+- **Amazon Book Reviews Dataset:** Used for feature engineering.
+- **scikit-learn:** For machine learning utilities.
+
+---
+
+## Contact
+
+For questions or suggestions, contact:  
+**Soren Larsen** – [iamsorenl@gmail.com](mailto:iamsorenl@gmail.com)
