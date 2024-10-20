@@ -82,7 +82,7 @@ def prepare_features(X_train, X_test):
 
     return bow_train, bow_test, tfidf_train, tfidf_test, onehot_train, onehot_test
 
-def apply_classifiers(classifiers, X_train, X_test, y_train, y_test):
+def apply_classifiers(classifiers, y_train, y_test):
     """Apply different classifiers with the same feature techniques."""
     for name, clf, X_train_vec, X_test_vec in classifiers:
         evaluate_model(name, clf, X_train_vec, X_test_vec, y_train, y_test)
@@ -100,7 +100,8 @@ def main():
     print(y_train.value_counts())
     print("\nTest set label distribution:")
     print(y_test.value_counts())
-    plot_class_distribution(y_train, y_test)
+    # moving this to after the data runs through the classifiers
+    # plot_class_distribution(y_train, y_test)
 
     # Prepare features
     bow_train, bow_test, tfidf_train, tfidf_test, onehot_train, onehot_test = prepare_features(X_train, X_test)
@@ -121,7 +122,10 @@ def main():
     ]
 
     # Apply all classifiers
-    apply_classifiers(classifiers, X_train, X_test, y_train, y_test)
+    apply_classifiers(classifiers, y_train, y_test)
+
+    # Plot class distribution after running classifiers
+    plot_class_distribution(y_train, y_test)
 
 if __name__ == "__main__":
     main()

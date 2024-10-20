@@ -68,7 +68,7 @@ def evaluate_model(name, clf, X_train, X_test, y_train, y_test):
     print("Confusion Matrix:")
     print(cm)
 
-def apply_classifiers(classifiers, X_train, X_test, y_train, y_test):
+def apply_classifiers(classifiers, y_train, y_test):
     """Apply classifiers to the prepared data."""
     for name, clf, X_train_vec, X_test_vec in classifiers:
         evaluate_model(name, clf, X_train_vec, X_test_vec, y_train, y_test)
@@ -92,7 +92,7 @@ def main():
     ]
 
     # Apply classifiers
-    apply_classifiers(classifiers, X_train, X_test, y_train, y_test)
+    apply_classifiers(classifiers, y_train, y_test)
 
 if __name__ == "__main__":
     main()
